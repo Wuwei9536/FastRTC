@@ -1,0 +1,24 @@
+{
+  "name": "webrtc-communication",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wuwei9536/WebRTC-Communication.git"
+  },
+  "author": "WuWei",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/Wuwei9536/WebRTC-Communication/issues"
+  },
+  "homepage": "https://github.com/Wuwei9536/WebRTC-Communication#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
+}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+  <!--<![endif]-->
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title></title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/call.css" />
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+      <p class="browsehappy">
+        You are using an <strong>outdated</strong> browser. Please
+        <a href="#">upgrade your browser</a> to improve your experience.
+      </p>
+    <![endif]-->
+    <form>
+      <div class="segment">
+        <h1>创建房间</h1>
+      </div>
+
+      <label>
+        <input id="room" type="text" placeholder="房间号" />
+      </label>
+      <label>
+        <input type="password" placeholder="房间人数上限,默认是2" />
+      </label>
+      <button
+        class="red"
+        type="button"
+        onclick="{window.location.href = '/rtc/' + document.getElementById('room').value}"
+      >
+        <i class="icon ion-md-lock"></i> 进入房间
+      </button>
+    </form>
+
+    <script src="" async defer></script>
+  </body>
+</html>
