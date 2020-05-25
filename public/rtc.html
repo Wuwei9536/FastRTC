@@ -11,7 +11,8 @@
     <title></title>
     <meta name="description" content="" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="" />
+    <link rel="stylesheet" href="/css/rtc.css" />
+    <link rel="stylesheet" href="/css/loading-ball.css" />
   </head>
   <body>
     <!--[if lt IE 7]>
@@ -20,8 +21,11 @@
         <a href="#">upgrade your browser</a> to improve your experience.
       </p>
     <![endif]-->
+    <div class="loader-ball" id="loader-ball"></div>
     <video id="remote-video" autoplay playsinline></video>
-    <video id="local-video" autoplay muted playsinline></video>
+    <div id="moveable">
+      <video id="local-video" autoplay muted playsinline></video>
+    </div>
     <script src="" async defer></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://github.com/muaz-khan/DetectRTC/releases/download/1.4.0/DetectRTC.js"></script>

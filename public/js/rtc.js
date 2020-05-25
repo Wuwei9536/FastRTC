@@ -234,6 +234,7 @@ const WebRTC = {
     logIt("onTrack <<< Received new stream from remote. Adding it...");
     // Update remote video source
     WebRTC.remoteVideo.srcObject = event.streams[0];
+    document.getElementById("loader-ball").style.display = "none";
     // Close the initial share url snackbar
     // Remove the loading gif from video
     WebRTC.remoteVideo.style.background = "none";
