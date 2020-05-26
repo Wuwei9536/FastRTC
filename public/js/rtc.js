@@ -33,7 +33,7 @@ const WebRTC = {
   // noMediaStream function.
   requestMediaStream: function (event) {
     logIt("requestMediaStream");
-    // rePositionLocalVideo();
+    rePositionLocalVideo();
     navigator.mediaDevices
       .getUserMedia({
         video: true,
@@ -367,4 +367,25 @@ function handleRecieveMessage(msg) {
   }
 }
 
+function rePositionLocalVideo() {
+  // Get position of remote video
+  var bounds = remoteVideo.getBoundingClientRect();
+  if (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    )
+  ) {
+    // bounds.top = window.height * 0.7;
+    bounds.left += 10;
+  } else {
+    bounds.top += 10;
+    bounds.left += 10;
+  }
+  // Set position of local video
+  document.getElementById("moveable").style.top = `${bounds.top}px`;
+  document.getElementById("moveable").style.left = `${bounds.left}px`;
+}
+
 WebRTC.requestMediaStream();
+
+draggable(document.getElementById("moveable"));
