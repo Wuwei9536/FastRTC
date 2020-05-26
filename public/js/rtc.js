@@ -319,14 +319,14 @@ function addMessageToScreen(msg, isOwnMessage) {
 function toggleChat() {
   var chatIcon = document.getElementById("chat-icon");
   var chatText = document.getElementById("chat-text");
-  if (entireChat.is(":visible")) {
-    entireChat.fadeOut();
+  if (entireChat.style.display !== "none") {
+    fadeOut(entireChat);
     // Update show chat buttton
     chatText.textContent("Show Chat");
     chatIcon.classList.remove("fa-comment-slash");
     chatIcon.classList.add("fa-comment");
   } else {
-    entireChat.fadeIn();
+    fadeIn(entireChat);
     // Update show chat buttton
     chatText.textContent("Hide Chat");
     chatIcon.classList.remove("fa-comment");
@@ -362,7 +362,7 @@ function handleRecieveMessage(msg) {
   // Auto scroll chat down
   chatZone.scrollTop = chatZone.scrollHeight;
   // Show chat if hidden
-  if (entireChat.is(":hidden")) {
+  if (entireChat.style.display === "none") {
     toggleChat();
   }
 }
