@@ -26,9 +26,88 @@
     <div id="moveable">
       <video id="local-video" autoplay muted playsinline></video>
     </div>
-    <script src="" async defer></script>
+
+    <div id="entire-chat">
+      <div id="chat-zone">
+        <div class="chat-messages" id="chat-messages"></div>
+      </div>
+      <form class="compose">
+        <input type="text" placeholder="Type a message" />
+      </form>
+    </div>
+
+    <div class="multi-button">
+      <div class="buttonContainer">
+        <button class="hoverButton" onclick="{muteMicrophone()}">
+          <i id="mic-icon" class="fas fa-microphone fa-xs"></i>
+        </button>
+        <div class="HoverState" id="mic-text">Mute</div>
+      </div>
+
+      <!--      <div class="buttonContainer">-->
+      <!--        <button class="hoverButton" onclick="{openFullscreen()}">-->
+      <!--          <i class="fas fa-compress fa-xs"></i>-->
+      <!--        </button>-->
+      <!--        <div class="HoverState">Fullscreen</div>-->
+      <!--      </div>-->
+
+      <div class="buttonContainer">
+        <button class="hoverButton" onclick="{pauseVideo()}">
+          <i class="fas fa-video fa-xs" id="video-icon"></i>
+        </button>
+        <div class="HoverState" id="video-text">Pause Video</div>
+      </div>
+
+      <div class="buttonContainer">
+        <button class="hoverButton" id="share-button" onclick="{swap()}">
+          <i id="swap-icon" class="fas fa-desktop fa-xs"></i>
+        </button>
+        <div class="HoverState" id="swap-text">Share Screen</div>
+      </div>
+
+      <div class="buttonContainer">
+        <button class="hoverButton" onclick="{toggleChat()}">
+          <i id="chat-icon" class="fas fa-comment fa-xs"></i>
+        </button>
+        <div class="HoverState" id="chat-text">Show Chat</div>
+      </div>
+
+      <div class="buttonContainer">
+        <button
+          class="hoverButton"
+          id="pip-button"
+          onclick="{togglePictureInPicture()}"
+        >
+          <i class="fas fa-external-link-alt fa-xs"></i>
+        </button>
+        <div class="HoverState" id="pip-text">Toggle Picture in Picture</div>
+      </div>
+
+      <div class="buttonContainer">
+        <button class="hoverButton" onclick="{requestToggleCaptions()}">
+          <i class="fas fa-closed-captioning fa-xs"></i>
+        </button>
+        <div class="HoverState" id="caption-button-text">
+          Start Live Caption
+        </div>
+      </div>
+
+      <div class="buttonContainer">
+        <button
+          class="hoverButton"
+          onclick="{window.location.href = '/newcall'}"
+        >
+          <i class="fas fa-phone-slash fa-xs"></i>
+        </button>
+        <div class="HoverState">End Call</div>
+      </div>
+    </div>
+
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://github.com/muaz-khan/DetectRTC/releases/download/1.4.0/DetectRTC.js"></script>
     <script id="chatJS" src="../js/rtc.js"></script>
+    <script src="../utils/snackbar.js"></script>
+    <script defer src="../utils/autolink.js"></script>
   </body>
 </html>

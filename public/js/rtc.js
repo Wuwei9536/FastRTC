@@ -1,5 +1,17 @@
+/* 数据通道 */
+let dataChanel = null;
 const url = window.location.href;
 const roomHash = url.substring(url.lastIndexOf("/") + 1).toLowerCase();
+
+// Element vars
+const chatInput = document.querySelector(".compose input");
+const remoteVideoVanilla = document.getElementById("remote-video");
+const remoteVideo = document.getElementById("remote-video");
+const captionText = document.getElementById("remote-video-text");
+const localVideoText = document.getElementById("local-video-text");
+const captionButtontext = document.getElementById("caption-button-text");
+const entireChat = document.getElementById("entire-chat");
+const chatZone = document.getElementById("chat-zone");
 
 // Basic logging class wrapper
 function logIt(message, error) {
@@ -91,6 +103,32 @@ const WebRTC = {
       WebRTC.localStream.getTracks().forEach(function (track) {
         WebRTC.peerConnection.addTrack(track, WebRTC.localStream);
       });
+      // Add general purpose data channel to peer connection,
+      // used for text chats, captions, and toggling sending captions
+      dataChanel = WebRTC.peerConnection.createDataChannel("chat", {
+        negotiated: true,
+        // both peers must have same id
+        id: 0,
+      });
+      // Called when dataChannel is successfully opened
+      dataChanel.onopen = function (event) {
+        logIt("dataChannel opened");
+      };
+      // Handle different dataChannel types
+      dataChanel.onmessage = function (event) {
+        const receivedData = event.data;
+        // First 4 chars represent data type
+        const dataType = receivedData.substring(0, 4);
+        const cleanedMessage = receivedData.slice(4);
+        if (dataType === "mes:") {
+          handleRecieveMessage(cleanedMessage);
+        } else if (dataType === "cap:") {
+          // recieveCaptions(cleanedMessage);
+        } else if (dataType === "tog:") {
+          // toggleSendCaptions();
+        }
+      };
+
       // Set up callbacks for the connection generating iceCandidates or
       // receiving the remote media stream.
       WebRTC.peerConnection.onicecandidate = WebRTC.onIceCandidate;
@@ -254,5 +292,79 @@ const WebRTC = {
     // }, 300);
   },
 };
+
+// Text Chat
+// Add text message to chat screen on page
+function addMessageToScreen(msg, isOwnMessage) {
+  const msgContent = document.createElement("div");
+  msgContent.setAttribute("class", "message");
+  msgContent.textContent = msg;
+  const msgBloc = document.createElement("div");
+  msgBloc.setAttribute("class", "message-bloc");
+  msgBloc.appendChild(msgContent);
+  const msgItem = document.createElement("div");
+  msgItem.setAttribute(
+    "class",
+    "message-item customer cssanimation fadeInBottom"
+  );
+  msgItem.appendChild(msgBloc);
+  if (isOwnMessage) {
+    document.getElementById("chat-messages").appendChild(msgItem);
+  } else {
+    document.getElementById("chat-messages").appendChild(msgItem);
+  }
+}
+
+// Show and hide chat
+function toggleChat() {
+  var chatIcon = document.getElementById("chat-icon");
+  var chatText = document.getElementById("chat-text");
+  if (entireChat.is(":visible")) {
+    entireChat.fadeOut();
+    // Update show chat buttton
+    chatText.textContent("Show Chat");
+    chatIcon.classList.remove("fa-comment-slash");
+    chatIcon.classList.add("fa-comment");
+  } else {
+    entireChat.fadeIn();
+    // Update show chat buttton
+    chatText.textContent("Hide Chat");
+    chatIcon.classList.remove("fa-comment");
+    chatIcon.classList.add("fa-comment-slash");
+  }
+}
+
+// Listen for enter press on chat input
+chatInput.addEventListener("keypress", function (event) {
+  if (event.keyCode === 13) {
+    // Prevent page refresh on enter
+    event.preventDefault();
+    var msg = chatInput.value;
+    // Prevent cross site scripting
+    msg = msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    // Make links clickable
+    msg = msg.autoLink();
+    // Send message over data channel
+    dataChanel.send("mes:" + msg);
+    // Add message to screen
+    addMessageToScreen(msg, true);
+    // Auto scroll chat down
+    chatZone.scrollTop = chatZone.scrollHeight;
+    // Clear chat input
+    chatInput.value = "";
+  }
+});
+
+// Called when a message is recieved over the dataChannel
+function handleRecieveMessage(msg) {
+  // Add message to screen
+  addMessageToScreen(msg, false);
+  // Auto scroll chat down
+  chatZone.scrollTop = chatZone.scrollHeight;
+  // Show chat if hidden
+  if (entireChat.is(":hidden")) {
+    toggleChat();
+  }
+}
 
 WebRTC.requestMediaStream();
