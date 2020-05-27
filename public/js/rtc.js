@@ -1,5 +1,8 @@
 /* 数据通道 */
 let dataChanel = null;
+let audioEnabled;
+let videoEnabled;
+
 const url = window.location.href;
 const roomHash = url.substring(url.lastIndexOf("/") + 1).toLowerCase();
 
@@ -420,7 +423,6 @@ function togglePictureInPicture() {
 
 // Pause Video
 function pauseVideo() {
-  let videoEnabled;
   // Get video track to pause
   WebRTC.peerConnection.getSenders().forEach(function (sender) {
     if (sender.track.kind === "video") {
@@ -450,7 +452,6 @@ function pauseVideo() {
 
 // Mute microphone
 function muteMicrophone() {
-  let audioEnabled;
   // Get audio track to mute
   WebRTC.peerConnection.getSenders().forEach(function (sender) {
     if (sender.track.kind === "audio") {
@@ -473,6 +474,100 @@ function muteMicrophone() {
   }
 }
 // End Mute microphone
+
+// Swap camera / screen share
+function swap() {
+  // Handle swap video before video call is connected
+  if (!WebRTC.connected) {
+    alert("You must join a call before you can share your screen.");
+    return;
+  }
+  // Store swap button icon and text
+  const swapIcon = document.getElementById("swap-icon");
+  const swapText = document.getElementById("swap-text");
+  // If mode is camera then switch to screen share
+  if (mode === "camera") {
+    // Show accept screenshare snackbar
+    Snackbar.show({
+      text:
+        "Please allow screen share. Click the middle of the picture above and then press share.",
+      width: "400px",
+      pos: "bottom-center",
+      actionTextColor: "#616161",
+      duration: 50000,
+    });
+    // Request screen share, note we dont want to capture audio
+    // as we already have the stream from the Webcam
+    navigator.mediaDevices
+      .getDisplayMedia({
+        video: true,
+        audio: false,
+      })
+      .then(function (stream) {
+        // Close allow screenshare snackbar
+        Snackbar.close();
+        // Change display mode
+        mode = "screen";
+        // Update swap button icon and text
+        swapIcon.classList.remove("fa-desktop");
+        swapIcon.classList.add("fa-camera");
+        swapText.innerText = "Share Webcam";
+        switchStreamHelper(stream);
+      })
+      .catch(function (err) {
+        logIt(err);
+        logIt("Error sharing screen");
+        Snackbar.close();
+      });
+    // If mode is screenshare then switch to webcam
+  } else {
+    // Stop the screen share track
+    WebRTC.localVideo.srcObject.getTracks().forEach((track) => track.stop());
+    // Get webcam input
+    navigator.mediaDevices
+      .getUserMedia({
+        video: true,
+        audio: true,
+      })
+      .then(function (stream) {
+        // Change display mode
+        mode = "camera";
+        // Update swap button icon and text
+        swapIcon.classList.remove("fa-camera");
+        swapIcon.classList.add("fa-desktop");
+        swapText.innerText = "Share Screen";
+        switchStreamHelper(stream);
+      });
+  }
+}
+
+// Swap current video track with passed in stream
+function switchStreamHelper(stream) {
+  // Get current video track
+  let videoTrack = stream.getVideoTracks()[0];
+  // Add listen for if the current track swaps, swap back
+  videoTrack.onended = function () {
+    swap();
+  };
+  if (WebRTC.connected) {
+    // Find sender
+    const sender = WebRTC.peerConnection.getSenders().find(function (s) {
+      // make sure tack types match
+      return s.track.kind === videoTrack.kind;
+    });
+    // Replace sender track
+    sender.replaceTrack(videoTrack);
+  }
+  // Update local video stream
+  WebRTC.localStream = videoTrack;
+  // Update local video object
+  WebRTC.localVideo.srcObject = stream;
+  // Unpause video on swap
+  if (!videoEnabled) {
+    pauseVideo();
+  }
+}
+// End swap camera / screen share
 
 WebRTC.requestMediaStream();
 
