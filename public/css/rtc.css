@@ -205,16 +205,17 @@ button:hover {
   background: #16171a;
   padding: 10px;
   border-radius: 10px;
+  visibility: hidden;
+}
+
+.buttonContainer:hover .HoverState {
+  visibility: visible;
 }
 
 .buttonContainer {
   position: relative;
   margin: 0 auto;
 }
-
-/*.fa-phone-slash {*/
-/*  color: #470000;*/
-/*}*/
 
 /*End buttons*/
 

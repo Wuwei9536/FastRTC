@@ -67,7 +67,7 @@ const WebRTC = {
     // Now we're ready to join the chat room.
     WebRTC.socket.emit("join", roomHash);
     // Add listeners to the websocket
-    // WebRTC.socket.on("full", chatRoomFull);
+    WebRTC.socket.on("full", chatRoomFull);
     WebRTC.socket.on("offer", WebRTC.onOffer);
     WebRTC.socket.on("ready", WebRTC.readyToCall);
     WebRTC.socket.on(
@@ -194,6 +194,7 @@ const WebRTC = {
   // RTCIceCandidate and add it to the peerConnection.
   onCandidate: function (candidate) {
     // Update caption text
+    captionText.textContent = "Found other user... connecting";
     rtcCandidate = new RTCIceCandidate(JSON.parse(candidate));
     logIt(
       `onCandidate <<< Received remote ICE candidate (${rtcCandidate.address} - ${rtcCandidate.relatedAddress})`
@@ -282,6 +283,7 @@ const WebRTC = {
     // Update connection status
     WebRTC.connected = true;
     // Hide caption status text
+    fadeOut(captionText);
     // Reposition local video after a second, as there is often a delay
     // between adding a stream and the height of the video div changing
     // setTimeout(() => rePositionLocalVideo(), 500);
@@ -569,6 +571,22 @@ function switchStreamHelper(stream) {
 }
 // End swap camera / screen share
 
-WebRTC.requestMediaStream();
+// Called when socket receives message that room is full
+function chatRoomFull() {
+  alert(
+    "Chat room is full. Check to make sure you don't have multiple open tabs, or try with a new room link"
+  );
+  // Exit room and redirect
+  window.location.href = "/newcall";
+}
 
-draggable(document.getElementById("moveable"));
+function bootstrap() {
+  WebRTC.requestMediaStream();
+  // Set caption text on start
+  captionText.textContent = "Waiting for other user to join...";
+  fadeIn(captionText);
+
+  draggable(document.getElementById("moveable"));
+}
+
+bootstrap();
