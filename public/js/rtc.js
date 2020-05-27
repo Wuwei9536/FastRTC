@@ -1,15 +1,30 @@
 /* 数据通道 */
 let dataChanel = null;
+/* 是否输出音频流 */
 let audioEnabled;
+/* 是否输出视频流 */
 let videoEnabled;
+/* camera: 普通视屏流, screen: 共享屏幕 */
+let mode = "camera";
+/* 浏览器类型 */
+const browserName = getBrowserName();
+/* 是否支持WebRTC */
+const isWebRTCSupported =
+  navigator.getUserMedia ||
+  navigator.webkitGetUserMedia ||
+  navigator.mozGetUserMedia ||
+  navigator.msGetUserMedia ||
+  window.RTCPeerConnection;
 
 const url = window.location.href;
+
 const roomHash = url.substring(url.lastIndexOf("/") + 1).toLowerCase();
 
-// Element vars
+// Element 变量
 const chatInput = document.querySelector(".compose input");
-const remoteVideoVanilla = document.getElementById("remote-video");
-const remoteVideo = document.getElementById("remote-video");
+const remoteVideoGlobal = document.getElementById("remote-video");
+const localVideoGlobal = document.getElementById("local-video");
+const localVideoGlobalWrap = document.getElementById("moveable");
 const captionText = document.getElementById("remote-video-text");
 const localVideoText = document.getElementById("local-video-text");
 const captionButtontext = document.getElementById("caption-button-text");
@@ -30,10 +45,8 @@ const WebRTC = {
   localVideo: document.getElementById("local-video"),
   recognition: undefined,
   localStream: undefined,
-  // Call to getUserMedia (provided by adapter.js for cross browser compatibility)
-  // asking for access to both the video and audio streams. If the request is
-  // accepted callback to the onMediaStream function, otherwise callback to the
-  // noMediaStream function.
+
+  /* 要求同时访问视频和音频流 */
   requestMediaStream: function (event) {
     logIt("requestMediaStream");
     rePositionLocalVideo();
@@ -52,21 +65,43 @@ const WebRTC = {
         logIt(
           "Failed to get local webcam video, check webcam privacy settings"
         );
-        // Keep trying to get user media
-        setTimeout(WebRTC.requestMediaStream, 1000);
+        /* 继续尝试获取用户媒体 */
+        setTimeout(WebRTC.requestMediaStream, 2000);
       });
   },
 
-  // Called when a video stream is added to WebRTC
+  /* 当获取到音视频流时调用 */
   onMediaStream: function (stream) {
     logIt("onMediaStream");
     WebRTC.localStream = stream;
-    // Add the stream as video's srcObject.
-    // Now that we have webcam video sorted, prompt user to share URL
+
+    /* 将流添加为视频的srcObject */
     WebRTC.localVideo.srcObject = stream;
-    // Now we're ready to join the chat room.
+
+    /* 提示用户共享URL */
+    Snackbar.show({
+      text: "Here is the join link for your call: " + url,
+      actionText: "Copy Link",
+      width: "750px",
+      pos: "top-center",
+      actionTextColor: "#616161",
+      duration: 500000,
+      backgroundColor: "#16171a",
+      onActionClick: function (element) {
+        /* 将网址复制到剪贴板，这是通过创建一个临时元素来实现的，
+           将我们想要的文本添加到该元素，选择它，然后将其删除  */
+        const copyInput = document.createElement("input");
+        copyInput.value = window.location.href;
+        document.body.appendChild(copyInput);
+        copyInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(copyInput);
+        Snackbar.close();
+      },
+    });
+    // 加入聊天室
     WebRTC.socket.emit("join", roomHash);
-    // Add listeners to the websocket
+    // 增加监听
     WebRTC.socket.on("full", chatRoomFull);
     WebRTC.socket.on("offer", WebRTC.onOffer);
     WebRTC.socket.on("ready", WebRTC.readyToCall);
@@ -76,48 +111,49 @@ const WebRTC = {
     );
   },
 
-  // When we are ready to call, enable the Call button.
+  //当我们准备好拨打电话时，启用“通话”按钮。
   readyToCall: function (event) {
     logIt("readyToCall");
-    // First to join call will most likely initiate call
+    //最先加入通话的人最有可能发起通话
     if (WebRTC.willInitiateCall) {
       logIt("Initiating call");
       WebRTC.startCall();
     }
   },
 
-  // Set up a callback to run when we have the ephemeral token to use Twilio's TURN server.
+  /* 呼叫 */
   startCall: function (event) {
     logIt("startCall >>> Sending token request...");
+    /* 获取Turn服务器,并设置回调,回调执行完成后创建offer */
     WebRTC.socket.on("iceServers", WebRTC.onIceServers(WebRTC.createOffer));
     WebRTC.socket.emit("iceServers", roomHash);
   },
 
-  // When we receive the ephemeral token back from the server.
+  /* 当获取到Turn服务器信息时调用 */
   onIceServers: function (callback) {
     logIt("onIceServers");
-    return function (token) {
-      logIt("<<< Received token");
-      // Set up a new RTCPeerConnection using the token's iceServers.
+    return function (turn) {
+      logIt("<<< Received turn");
+      // 使用Turn建立RTCPeerConnection。
       WebRTC.peerConnection = new RTCPeerConnection({
-        iceServers: token.iceServers,
+        iceServers: turn.iceServers,
       });
-      // Add the local video stream to the peerConnection.
+      //将本地视频流添加到peerConnection。
       WebRTC.localStream.getTracks().forEach(function (track) {
         WebRTC.peerConnection.addTrack(track, WebRTC.localStream);
       });
-      // Add general purpose data channel to peer connection,
-      // used for text chats, captions, and toggling sending captions
+      //将通用数据通道添加到对等连接，
+      //用于文字聊天，字幕和切换发送字幕
       dataChanel = WebRTC.peerConnection.createDataChannel("chat", {
         negotiated: true,
         // both peers must have same id
         id: 0,
       });
-      // Called when dataChannel is successfully opened
+      //成功打开dataChannel时调用
       dataChanel.onopen = function (event) {
         logIt("dataChannel opened");
       };
-      // Handle different dataChannel types
+      //处理不同的dataChannel类型
       dataChanel.onmessage = function (event) {
         const receivedData = event.data;
         // First 4 chars represent data type
@@ -132,20 +168,19 @@ const WebRTC = {
         }
       };
 
-      // Set up callbacks for the connection generating iceCandidates or
-      // receiving the remote media stream.
+      //为生成iceCandidates的连接和接收远程媒体流设置回调
       WebRTC.peerConnection.onicecandidate = WebRTC.onIceCandidate;
       WebRTC.peerConnection.ontrack = WebRTC.onTrack;
-      // Set up listeners on the socket
+      //在套接字上设置侦听器
       WebRTC.socket.on("candidate", WebRTC.onCandidate);
       WebRTC.socket.on("answer", WebRTC.onAnswer);
 
-      // Called when there is a change in connection state
+      //当连接状态发生变化时调用
       WebRTC.peerConnection.oniceconnectionstatechange = function (event) {
         switch (WebRTC.peerConnection.iceConnectionState) {
           case "connected":
             logIt("connected");
-            // Once connected we no longer have a need for the signaling server, so disconnect
+            //一旦连接，我们就不再需要信令服务器，因此断开
             WebRTC.socket.disconnect();
             break;
           case "disconnected":
@@ -166,7 +201,7 @@ const WebRTC = {
     };
   },
 
-  // When the peerConnection generates an ice candidate, send it over the socket to the peer.
+  //当peerConnection生成一个ice候选对象时，将其通过套接字发送给对等连接。
   onIceCandidate: function (event) {
     logIt("onIceCandidate");
     if (event.candidate) {
@@ -181,19 +216,19 @@ const WebRTC = {
           roomHash
         );
       } else {
-        // If we are not 'connected' to the other peer, we are buffering the local ICE candidates.
-        // This most likely is happening on the "caller" side.
-        // The peer may not have created the RTCPeerConnection yet, so we are waiting for the 'answer'
-        // to arrive. This will signal that the peer is ready to receive signaling.
+        //如果我们未“连接”到其他对等方，则我们正在缓冲本地ICE候选对象。
+        //这很可能发生在“调用方”一侧。
+        //对等端可能尚未创建RTCPeerConnection，因此我们正在等待“answer”
+        //到达。这将表明对等端已准备好接收信号。
         WebRTC.localICECandidates.push(event.candidate);
       }
     }
   },
 
-  // When receiving a candidate over the socket, turn it back into a real
-  // RTCIceCandidate and add it to the peerConnection.
+  //当通过套接字接收候选人时，将其变回真实
+  //RTCIceCandidate并将其添加到peerConnection。
   onCandidate: function (candidate) {
-    // Update caption text
+    //更新字幕
     captionText.textContent = "Found other user... connecting";
     rtcCandidate = new RTCIceCandidate(JSON.parse(candidate));
     logIt(
@@ -202,14 +237,13 @@ const WebRTC = {
     WebRTC.peerConnection.addIceCandidate(rtcCandidate);
   },
 
-  // Create an offer that contains the media capabilities of the browser.
+  //创建一个包含浏览器媒体功能的offer
   createOffer: function () {
     logIt("createOffer >>> Creating offer...");
     WebRTC.peerConnection.createOffer(
       function (offer) {
-        // If the offer is created successfully, set it as the local description
-        // and send it over the socket connection to initiate the peerConnection
-        // on the other side.
+        //如果offer创建成功，则将其设置为本地描述
+        //并通过套接字连接发送它以在另一方启动peerConnection
         WebRTC.peerConnection.setLocalDescription(offer);
         WebRTC.socket.emit("offer", JSON.stringify(offer), roomHash);
       },
@@ -244,8 +278,7 @@ const WebRTC = {
     };
   },
 
-  // When a browser receives an offer, set up a callback to be run when the
-  // ephemeral token is returned from Twilio.
+  /* 当收到offer时 去获取Turn服务器信息来建立RTCPeerConnection */
   onOffer: function (offer) {
     logIt("onOffer <<< Received offer");
     WebRTC.socket.on(
@@ -255,175 +288,111 @@ const WebRTC = {
     WebRTC.socket.emit("iceServers", roomHash);
   },
 
-  // When an answer is received, add it to the peerConnection as the remote description.
+  //收到答案后，将其添加到peerConnection作为远程描述
   onAnswer: function (answer) {
     logIt("onAnswer <<< Received answer");
     var rtcAnswer = new RTCSessionDescription(JSON.parse(answer));
-    // Set remote description of RTCSession
+    //设置RTCSession的远程描述
     WebRTC.peerConnection.setRemoteDescription(rtcAnswer);
-    // The caller now knows that the callee is ready to accept new ICE candidates, so sending the buffer over
+    //现在，呼叫者知道被呼叫者已准备好接受新的ICE候选者
     WebRTC.localICECandidates.forEach((candidate) => {
       logIt(`>>> Sending local ICE candidate (${candidate.address})`);
-      // Send ice candidate over websocket
+      //通过websocket发送ice候选人
       WebRTC.socket.emit("candidate", JSON.stringify(candidate), roomHash);
     });
-    // Reset the buffer of local ICE candidates. This is not really needed, but it's good practice
+    //重置本地ICE候选者的缓冲区。
     WebRTC.localICECandidates = [];
   },
 
-  // Called when a stream is added to the peer connection
+  //当流添加到对等连接时调用
   onTrack: function (event) {
     logIt("onTrack <<< Received new stream from remote. Adding it...");
-    // Update remote video source
+    //更新远程视频源
     WebRTC.remoteVideo.srcObject = event.streams[0];
+    //从视频中删除加载的gif
     document.getElementById("loader-ball").style.display = "none";
-    // Close the initial share url snackbar
-    // Remove the loading gif from video
-    WebRTC.remoteVideo.style.background = "none";
-    // Update connection status
+    //关闭初始共享网址栏
+    Snackbar.close();
+    //更新连接状态
     WebRTC.connected = true;
-    // Hide caption status text
+    //隐藏字幕状态文本
     fadeOut(captionText);
-    // Reposition local video after a second, as there is often a delay
-    // between adding a stream and the height of the video div changing
-    // setTimeout(() => rePositionLocalVideo(), 500);
-    // var timesRun = 0;
-    // var interval = setInterval(function () {
-    //   timesRun += 1;
-    //   if (timesRun === 10) {
-    //     clearInterval(interval);
-    //   }
-    //   rePositionLocalVideo();
-    // }, 300);
+    //一秒钟后重新定位本地视频，因为通常会有延迟
+    //在添加流和更改视频div的高度之间
+    setTimeout(() => rePositionLocalVideo(), 500);
   },
 };
 
-// Text Chat
-// Add text message to chat screen on page
-function addMessageToScreen(msg, isOwnMessage) {
-  const msgContent = document.createElement("div");
-  msgContent.setAttribute("class", "message");
-  msgContent.textContent = msg;
-  const msgBloc = document.createElement("div");
-  msgBloc.setAttribute("class", "message-bloc");
-  msgBloc.appendChild(msgContent);
-  const msgItem = document.createElement("div");
-  msgItem.setAttribute(
-    "class",
-    "message-item customer cssanimation fadeInBottom"
+//使用用户代理获取浏览器会话的名称
+function getBrowserName() {
+  if (window.navigator.userAgent.indexOf("MSIE") !== -1) {
+    return "MSIE";
+  } else if (window.navigator.userAgent.indexOf("Firefox") !== -1) {
+    return "Firefox";
+  } else if (window.navigator.userAgent.indexOf("Opera") !== -1) {
+    return "Opera";
+  } else if (window.navigator.userAgent.indexOf("Chrome") !== -1) {
+    return "Chrome";
+  } else if (window.navigator.userAgent.indexOf("Safari") !== -1) {
+    return "Safari";
+  }
+  return "UnKnown";
+}
+
+//当套接字接收到房间已满的消息时调用
+function chatRoomFull() {
+  alert(
+    "Chat room is full. Check to make sure you don't have multiple open tabs, or try with a new room link"
   );
-  msgItem.appendChild(msgBloc);
-  if (isOwnMessage) {
-    document.getElementById("chat-messages").appendChild(msgItem);
-  } else {
-    document.getElementById("chat-messages").appendChild(msgItem);
-  }
+  //退出房间并重定向
+  window.location.href = "/newrtc";
 }
 
-// Show and hide chat
-function toggleChat() {
-  var chatIcon = document.getElementById("chat-icon");
-  var chatText = document.getElementById("chat-text");
-  if (entireChat.style.display !== "none") {
-    fadeOut(entireChat);
-    // Update show chat buttton
-    chatText.textContent("Show Chat");
-    chatIcon.classList.remove("fa-comment-slash");
-    chatIcon.classList.add("fa-comment");
-  } else {
-    fadeIn(entireChat);
-    // Update show chat buttton
-    chatText.textContent("Hide Chat");
-    chatIcon.classList.remove("fa-comment");
-    chatIcon.classList.add("fa-comment-slash");
-  }
-}
-
-// Listen for enter press on chat input
-chatInput.addEventListener("keypress", function (event) {
-  if (event.keyCode === 13) {
-    // Prevent page refresh on enter
-    event.preventDefault();
-    var msg = chatInput.value;
-    // Prevent cross site scripting
-    msg = msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    // Make links clickable
-    msg = msg.autoLink();
-    // Send message over data channel
-    dataChanel.send("mes:" + msg);
-    // Add message to screen
-    addMessageToScreen(msg, true);
-    // Auto scroll chat down
-    chatZone.scrollTop = chatZone.scrollHeight;
-    // Clear chat input
-    chatInput.value = "";
-  }
-});
-
-// Called when a message is recieved over the dataChannel
-function handleRecieveMessage(msg) {
-  // Add message to screen
-  addMessageToScreen(msg, false);
-  // Auto scroll chat down
-  chatZone.scrollTop = chatZone.scrollHeight;
-  // Show chat if hidden
-  if (entireChat.style.display === "none") {
-    toggleChat();
-  }
-}
-
+//将本地视频重新定位到远程视频的左上方
 function rePositionLocalVideo() {
-  // Get position of remote video
-  var bounds = remoteVideo.getBoundingClientRect();
+  //获取远程视频的位置
+  const bounds = remoteVideoGlobal.getBoundingClientRect();
   if (
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent
     )
   ) {
-    // bounds.top = window.height * 0.7;
+    bounds.top = window.height * 0.7;
     bounds.left += 10;
   } else {
     bounds.top += 10;
     bounds.left += 10;
   }
-  // Set position of local video
-  document.getElementById("moveable").style.top = `${bounds.top}px`;
-  document.getElementById("moveable").style.left = `${bounds.left}px`;
+  //设置本地视频的位置
+  localVideoGlobalWrap.style.top = `${bounds.top}px`;
+  localVideoGlobalWrap.style.left = `${bounds.left}px`;
 }
 
-//Picture in picture
-function togglePictureInPicture() {
-  if (
-    "pictureInPictureEnabled" in document ||
-    remoteVideoVanilla.webkitSetPresentationMode
-  ) {
-    if (document.pictureInPictureElement) {
-      document.exitPictureInPicture().catch((error) => {
-        logIt("Error exiting pip.");
-        logIt(error);
-      });
-    } else if (remoteVideoVanilla.webkitPresentationMode === "inline") {
-      remoteVideoVanilla.webkitSetPresentationMode("picture-in-picture");
-    } else if (
-      remoteVideoVanilla.webkitPresentationMode === "picture-in-picture"
-    ) {
-      remoteVideoVanilla.webkitSetPresentationMode("inline");
-    } else {
-      remoteVideoVanilla.requestPictureInPicture().catch((error) => {
-        alert(
-          "You must be connected to another person to enter picture in picture."
-        );
-      });
+//麦克风静音
+function muteMicrophone() {
+  // Get audio track to mute
+  WebRTC.peerConnection.getSenders().forEach(function (sender) {
+    if (sender.track.kind === "audio") {
+      sender.track.enabled = !sender.track.enabled;
+      audioEnabled = sender.track.enabled;
     }
+  });
+  // select mic button and mic button text
+  const micButtonIcon = document.getElementById("mic-icon");
+  const micButtonText = document.getElementById("mic-text");
+  // Update mute button text and icon
+  if (audioEnabled) {
+    micButtonIcon.classList.remove("fa-microphone");
+    micButtonIcon.classList.add("fa-microphone-slash");
+    micButtonText.innerText = "Unmute";
   } else {
-    alert(
-      "Picture in picture is not supported in your browser. Consider using Chrome or Safari."
-    );
+    micButtonIcon.classList.add("fa-microphone");
+    micButtonIcon.classList.remove("fa-microphone-slash");
+    micButtonText.innerText = "Mute";
   }
 }
-//Picture in picture
 
-// Pause Video
+//暂停视频
 function pauseVideo() {
   // Get video track to pause
   WebRTC.peerConnection.getSenders().forEach(function (sender) {
@@ -450,32 +419,6 @@ function pauseVideo() {
     videoButtonText.innerText = "Pause Video";
   }
 }
-// End pause Video
-
-// Mute microphone
-function muteMicrophone() {
-  // Get audio track to mute
-  WebRTC.peerConnection.getSenders().forEach(function (sender) {
-    if (sender.track.kind === "audio") {
-      sender.track.enabled = !sender.track.enabled;
-      audioEnabled = sender.track.enabled;
-    }
-  });
-  // select mic button and mic button text
-  const micButtonIcon = document.getElementById("mic-icon");
-  const micButtonText = document.getElementById("mic-text");
-  // Update mute button text and icon
-  if (audioEnabled) {
-    micButtonIcon.classList.remove("fa-microphone");
-    micButtonIcon.classList.add("fa-microphone-slash");
-    micButtonText.innerText = "Unmute";
-  } else {
-    micButtonIcon.classList.add("fa-microphone");
-    micButtonIcon.classList.remove("fa-microphone-slash");
-    micButtonText.innerText = "Mute";
-  }
-}
-// End Mute microphone
 
 // Swap camera / screen share
 function swap() {
@@ -571,22 +514,172 @@ function switchStreamHelper(stream) {
 }
 // End swap camera / screen share
 
-// Called when socket receives message that room is full
-function chatRoomFull() {
-  alert(
-    "Chat room is full. Check to make sure you don't have multiple open tabs, or try with a new room link"
-  );
-  // Exit room and redirect
-  window.location.href = "/newcall";
+// Text Chat
+//显示和隐藏聊天
+function toggleChat() {
+  var chatIcon = document.getElementById("chat-icon");
+  var chatText = document.getElementById("chat-text");
+  if (entireChat.style.display !== "none") {
+    fadeOut(entireChat);
+    // Update show chat buttton
+    chatText.textContent("Show Chat");
+    chatIcon.classList.remove("fa-comment-slash");
+    chatIcon.classList.add("fa-comment");
+  } else {
+    fadeIn(entireChat);
+    // Update show chat buttton
+    chatText.textContent("Hide Chat");
+    chatIcon.classList.remove("fa-comment");
+    chatIcon.classList.add("fa-comment-slash");
+  }
 }
 
+//将信息添加到页面上的聊天屏幕
+function addMessageToScreen(msg, isOwnMessage) {
+  const msgContent = document.createElement("div");
+  msgContent.setAttribute("class", "message");
+  msgContent.textContent = msg;
+  const msgBloc = document.createElement("div");
+  msgBloc.setAttribute("class", "message-bloc");
+  msgBloc.appendChild(msgContent);
+  const msgItem = document.createElement("div");
+  msgItem.appendChild(msgBloc);
+  if (isOwnMessage) {
+    msgItem.setAttribute(
+      "class",
+      "message-item customer cssanimation fadeInBottom"
+    );
+  } else {
+    msgItem.setAttribute(
+      "class",
+      "message-item moderator cssanimation fadeInBottom"
+    );
+  }
+  document.getElementById("chat-messages").appendChild(msgItem);
+}
+
+// Listen for enter press on chat input
+chatInput.addEventListener("keypress", function (event) {
+  if (event.keyCode === 13) {
+    // Prevent page refresh on enter
+    event.preventDefault();
+    var msg = chatInput.value;
+    // Prevent cross site scripting
+    msg = msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    // Make links clickable
+    msg = msg.autoLink();
+    // Send message over data channel
+    dataChanel.send("mes:" + msg);
+    // Add message to screen
+    addMessageToScreen(msg, true);
+    // Auto scroll chat down
+    chatZone.scrollTop = chatZone.scrollHeight;
+    // Clear chat input
+    chatInput.value = "";
+  }
+});
+
+//当通过dataChannel接收到消息时调用
+function handleRecieveMessage(msg) {
+  // Add message to screen
+  addMessageToScreen(msg, false);
+  // Auto scroll chat down
+  chatZone.scrollTop = chatZone.scrollHeight;
+  // Show chat if hidden
+  if (entireChat.style.display === "none") {
+    toggleChat();
+  }
+}
+// End Text
+
+//Picture in picture
+function togglePictureInPicture() {
+  if (
+    "pictureInPictureEnabled" in document ||
+    remoteVideoGlobal.webkitSetPresentationMode
+  ) {
+    if (document.pictureInPictureElement) {
+      document.exitPictureInPicture().catch((error) => {
+        logIt("Error exiting pip.");
+        logIt(error);
+      });
+    } else if (remoteVideoGlobal.webkitPresentationMode === "inline") {
+      remoteVideoGlobal.webkitSetPresentationMode("picture-in-picture");
+    } else if (
+      remoteVideoGlobal.webkitPresentationMode === "picture-in-picture"
+    ) {
+      remoteVideoGlobal.webkitSetPresentationMode("inline");
+    } else {
+      remoteVideoGlobal.requestPictureInPicture().catch((error) => {
+        alert(
+          "You must be connected to another person to enter picture in picture."
+        );
+      });
+    }
+  } else {
+    alert(
+      "Picture in picture is not supported in your browser. Consider using Chrome or Safari."
+    );
+  }
+}
+//Picture in picture
+
 function bootstrap() {
+  //尝试检测应用内浏览器并重定向
+  var ua = navigator.userAgent || navigator.vendor || window.opera;
+  if (
+    DetectRTC.isMobileDevice &&
+    (ua.indexOf("FBAN") > -1 ||
+      ua.indexOf("FBAV") > -1 ||
+      ua.indexOf("Instagram") > -1)
+  ) {
+    if (DetectRTC.osName === "iOS") {
+      window.location.href = "/notsupportedios";
+    } else {
+      window.location.href = "/notsupported";
+    }
+  }
+
+  //重定向不是Safari的所有iOS浏览器
+  if (DetectRTC.isMobileDevice) {
+    if (DetectRTC.osName === "iOS" && !DetectRTC.browser.isSafari) {
+      window.location.href = "/notsupportedios";
+    }
+  }
+
+  if (!isWebRTCSupported || browserName === "MSIE") {
+    window.location.href = "/notsupported";
+  }
+  //加载网络摄像头
   WebRTC.requestMediaStream();
-  // Set caption text on start
+
+  //默认情况下隐藏文字聊天
+  entireChat.style.display = "none";
+
+  //在开始时设置字幕
   captionText.textContent = "Waiting for other user to join...";
   fadeIn(captionText);
 
-  draggable(document.getElementById("moveable"));
+  draggable(localVideoGlobalWrap);
+
+  // Show accept webcam snackbar
+  Snackbar.show({
+    text: "Please allow microphone and webcam access",
+    actionText: "Show Me How",
+    width: "455px",
+    pos: "top-right",
+    actionTextColor: "#616161",
+    duration: 50000,
+    onActionClick: function (element) {
+      window.open(
+        "https://getacclaim.zendesk.com/hc/en-us/articles/360001547832-Setting-the-default-camera-on-your-browser",
+        "_blank"
+      );
+    },
+  });
+
+  //在更改媒体设备时刷新页面并切换到系统默认值
+  navigator.mediaDevices.ondevicechange = () => window.location.reload();
 }
 
 bootstrap();

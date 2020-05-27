@@ -25,7 +25,9 @@
     <title>fastrtc</title>
     <meta name="description" content="" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/webrtc.svg" type="image/x-icon" />
     <link rel="stylesheet" href="/css/rtc.css" />
+    <link rel="stylesheet" href="/css/snackbar.css" />
     <link rel="stylesheet" href="/css/loading-ball.css" />
     <link rel="stylesheet" href="/fontawesome/css/free.min.css" />
     <link rel="stylesheet" href="/fontawesome/css/v4-shims.min.css" />
@@ -121,6 +123,8 @@
         <div class="HoverState">End Call</div>
       </div>
     </div>
+
+    <input type="hidden" id="copy-input" />
 
     <script src="/utils/adapter.js"></script>
     <script src="/socket.io/socket.io.js"></script>
