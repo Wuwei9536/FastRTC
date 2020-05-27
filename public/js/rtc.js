@@ -41,8 +41,8 @@ const WebRTC = {
       })
       .then((stream) => {
         WebRTC.onMediaStream(stream);
-        // localVideoText.text("Drag Me");
-        // setTimeout(() => localVideoText.fadeOut(), 5000);
+        localVideoText.textContent = "Drag Me";
+        setTimeout(() => fadeOut(localVideoText), 5000);
       })
       .catch((error) => {
         logIt(error);
@@ -385,6 +385,94 @@ function rePositionLocalVideo() {
   document.getElementById("moveable").style.top = `${bounds.top}px`;
   document.getElementById("moveable").style.left = `${bounds.left}px`;
 }
+
+//Picture in picture
+function togglePictureInPicture() {
+  if (
+    "pictureInPictureEnabled" in document ||
+    remoteVideoVanilla.webkitSetPresentationMode
+  ) {
+    if (document.pictureInPictureElement) {
+      document.exitPictureInPicture().catch((error) => {
+        logIt("Error exiting pip.");
+        logIt(error);
+      });
+    } else if (remoteVideoVanilla.webkitPresentationMode === "inline") {
+      remoteVideoVanilla.webkitSetPresentationMode("picture-in-picture");
+    } else if (
+      remoteVideoVanilla.webkitPresentationMode === "picture-in-picture"
+    ) {
+      remoteVideoVanilla.webkitSetPresentationMode("inline");
+    } else {
+      remoteVideoVanilla.requestPictureInPicture().catch((error) => {
+        alert(
+          "You must be connected to another person to enter picture in picture."
+        );
+      });
+    }
+  } else {
+    alert(
+      "Picture in picture is not supported in your browser. Consider using Chrome or Safari."
+    );
+  }
+}
+//Picture in picture
+
+// Pause Video
+function pauseVideo() {
+  let videoEnabled;
+  // Get video track to pause
+  WebRTC.peerConnection.getSenders().forEach(function (sender) {
+    if (sender.track.kind === "video") {
+      sender.track.enabled = !sender.track.enabled;
+      videoEnabled = sender.track.enabled;
+    }
+  });
+  // select video button and video button text
+  const videoButtonIcon = document.getElementById("video-icon");
+  const videoButtonText = document.getElementById("video-text");
+  // update pause button icon and text
+  if (!videoEnabled) {
+    localVideoText.textContent = "Video is paused";
+    localVideoText.style.visibility = "visible";
+    videoButtonIcon.classList.remove("fa-video");
+    videoButtonIcon.classList.add("fa-video-slash");
+    videoButtonText.innerText = "Unpause Video";
+  } else {
+    localVideoText.textContent = "Video unpaused";
+    localVideoText.style.visibility = "hidden";
+    videoButtonIcon.classList.add("fa-video");
+    videoButtonIcon.classList.remove("fa-video-slash");
+    videoButtonText.innerText = "Pause Video";
+  }
+}
+// End pause Video
+
+// Mute microphone
+function muteMicrophone() {
+  let audioEnabled;
+  // Get audio track to mute
+  WebRTC.peerConnection.getSenders().forEach(function (sender) {
+    if (sender.track.kind === "audio") {
+      sender.track.enabled = !sender.track.enabled;
+      audioEnabled = sender.track.enabled;
+    }
+  });
+  // select mic button and mic button text
+  const micButtonIcon = document.getElementById("mic-icon");
+  const micButtonText = document.getElementById("mic-text");
+  // Update mute button text and icon
+  if (audioEnabled) {
+    micButtonIcon.classList.remove("fa-microphone");
+    micButtonIcon.classList.add("fa-microphone-slash");
+    micButtonText.innerText = "Unmute";
+  } else {
+    micButtonIcon.classList.add("fa-microphone");
+    micButtonIcon.classList.remove("fa-microphone-slash");
+    micButtonText.innerText = "Mute";
+  }
+}
+// End Mute microphone
 
 WebRTC.requestMediaStream();
 

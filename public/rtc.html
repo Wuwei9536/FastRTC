@@ -39,8 +39,10 @@
       </p>
     <![endif]-->
     <div class="loader-ball" id="loader-ball"></div>
+    <p id="remote-video-text"></p>
     <video id="remote-video" autoplay playsinline></video>
     <div id="moveable">
+      <p id="local-video-text">没有网络摄像头输入</p>
       <video id="local-video" autoplay muted playsinline></video>
     </div>
 
@@ -124,9 +126,8 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="/utils/DetectRTC.js"></script>
     <script src="/utils/snackbar.js"></script>
-    <script src="/utils/drag.js"></script>
     <script defer src="/utils/autolink.js"></script>
-    <script defer src="/utils/fade.js"></script>
+    <script src="/utils/utils.js"></script>
     <script id="chatJS" src="/js/rtc.js"></script>
   </body>
 </html>
