@@ -17,13 +17,13 @@ const isWebRTCSupported =
   navigator.msGetUserMedia ||
   window.RTCPeerConnection;
 
-const url = window.location.pathname;
-const urlType = url
-  .substring(url.indexOf("/") + 1, url.indexOf("/") + 5)
+const url = window.location.href;
+const urlPath = window.location.pathname;
+const urlType = urlPath
+  .substring(urlPath.indexOf("/") + 1, urlPath.indexOf("/") + 5)
   .toLowerCase();
-console.log({ urlType });
-const urlPath = url.substring(url.lastIndexOf("/") + 1).toLowerCase();
-let roomHash = urlPath;
+const urlSuffix = url.substring(url.lastIndexOf("/") + 1).toLowerCase();
+let roomHash = urlSuffix;
 
 // Element 变量
 const chatInput = document.querySelector(".compose input");
@@ -85,8 +85,8 @@ const WebRTC = {
 
     /* 提示用户共享URL */
     Snackbar.show({
-      text: "Here is the join link for your call: " + url,
-      actionText: "Copy Link",
+      text: "这是这次通话的加入链接: " + url,
+      actionText: "复制链接",
       width: "750px",
       pos: "top-center",
       actionTextColor: "#616161",
@@ -347,7 +347,7 @@ function getBrowserName() {
 //当套接字接收到房间已满的消息时调用
 function chatRoomFull() {
   alert(
-    "Chat room is full. Check to make sure you don't have multiple open tabs, or try with a new room link"
+    "聊天室已满。检查以确保您没有多个打开的标签，或者尝试使用新的会议室链接。"
   );
   //退出房间并重定向
   window.location.href = "/newrtc";
@@ -429,7 +429,7 @@ function pauseVideo() {
 function swap() {
   // Handle swap video before video call is connected
   if (!WebRTC.connected) {
-    alert("You must join a call before you can share your screen.");
+    alert("您必须先加入通话，然后才能共享屏幕");
     return;
   }
   // Store swap button icon and text
@@ -616,15 +616,11 @@ function togglePictureInPicture() {
       remoteVideoGlobal.webkitSetPresentationMode("inline");
     } else {
       remoteVideoGlobal.requestPictureInPicture().catch((error) => {
-        alert(
-          "You must be connected to another person to enter picture in picture."
-        );
+        alert("您必须连接到其他人才能进入画中画模式");
       });
     }
   } else {
-    alert(
-      "Picture in picture is not supported in your browser. Consider using Chrome or Safari."
-    );
+    alert("你的浏览器不支持画中画。考虑使用Chrome或Safari。");
   }
 }
 //Picture in picture
@@ -640,7 +636,7 @@ function requestPassword() {
   } else {
     password = sessionPassword;
   }
-  roomHash = urlPath + password;
+  roomHash = urlSuffix + password;
 }
 
 function bootstrap() {
@@ -677,7 +673,7 @@ function bootstrap() {
   entireChat.style.display = "none";
 
   //在开始时设置字幕
-  captionText.textContent = "Waiting for other user to join...";
+  captionText.textContent = "正在等待其他用户加入... ";
   fadeIn(captionText);
 
   draggable(localVideoGlobalWrap);
