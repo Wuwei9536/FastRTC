@@ -640,12 +640,12 @@ function bootstrap() {
     }
   }
 
-  //重定向不是Safari的所有iOS浏览器
-  if (DetectRTC.isMobileDevice) {
-    if (DetectRTC.osName === "iOS" && !DetectRTC.browser.isSafari) {
-      window.location.href = "/notsupportedios";
-    }
-  }
+  // 重定向不是Safari的所有iOS浏览器;
+  // if (DetectRTC.isMobileDevice) {
+  //   if (DetectRTC.osName === "iOS" && !DetectRTC.browser.isSafari) {
+  //     window.location.href = "/notsupportedios";
+  //   }
+  // }
 
   if (!isWebRTCSupported || browserName === "MSIE") {
     window.location.href = "/notsupported";

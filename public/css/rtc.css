@@ -141,10 +141,6 @@ a {
   max-height: 100%;
   max-width: 100%;
   border-radius: 10px;
-  background-image: url(../images/loader.gif);
-  background-size: 400px auto;
-  background-repeat: no-repeat;
-  background-position: center center;
 }
 
 #remote-video.fullscreen {
