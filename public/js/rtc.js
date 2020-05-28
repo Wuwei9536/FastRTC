@@ -6,6 +6,7 @@ let audioEnabled;
 let videoEnabled;
 /* camera: 普通视屏流, screen: 共享屏幕 */
 let mode = "camera";
+let password = "";
 /* 浏览器类型 */
 const browserName = getBrowserName();
 /* 是否支持WebRTC */
@@ -16,9 +17,13 @@ const isWebRTCSupported =
   navigator.msGetUserMedia ||
   window.RTCPeerConnection;
 
-const url = window.location.href;
-
-const roomHash = url.substring(url.lastIndexOf("/") + 1).toLowerCase();
+const url = window.location.pathname;
+const urlType = url
+  .substring(url.indexOf("/") + 1, url.indexOf("/") + 5)
+  .toLowerCase();
+console.log({ urlType });
+const urlPath = url.substring(url.lastIndexOf("/") + 1).toLowerCase();
+let roomHash = urlPath;
 
 // Element 变量
 const chatInput = document.querySelector(".compose input");
@@ -624,6 +629,20 @@ function togglePictureInPicture() {
 }
 //Picture in picture
 
+function requestPassword() {
+  const sessionPassword = sessionStorage.getItem("fastrtc");
+  if (!sessionPassword) {
+    const promptPassword = prompt("请输入密码", "");
+    if (promptPassword != null && promptPassword != "") {
+      sessionStorage.setItem("fastrtc", promptPassword);
+      password = promptPassword;
+    }
+  } else {
+    password = sessionPassword;
+  }
+  roomHash = urlPath + password;
+}
+
 function bootstrap() {
   //尝试检测应用内浏览器并重定向
   var ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -650,6 +669,7 @@ function bootstrap() {
   if (!isWebRTCSupported || browserName === "MSIE") {
     window.location.href = "/notsupported";
   }
+  urlType === "auth" && requestPassword();
   //加载网络摄像头
   WebRTC.requestMediaStream();
 

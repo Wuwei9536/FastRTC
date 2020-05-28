@@ -43,18 +43,28 @@
       <label>
         <input id="room" type="text" placeholder="房间号" />
       </label>
+      <label>
+        <input id="password" type="text" placeholder="房间密码,选填" />
+      </label>
       <!-- <label>
         <input type="password" placeholder="房间人数上限,默认是2" />
       </label> -->
-      <button
-        class="red"
-        type="button"
-        onclick="{window.location.href = '/rtc/' + document.getElementById('room').value}"
-      >
+      <button class="red" type="button" onclick="{joinRoom()}">
         <i class="icon ion-md-lock"></i> 进入房间
       </button>
     </form>
 
-    <script src="" async defer></script>
+    <script>
+      function joinRoom() {
+        const room = document.getElementById("room").value;
+        const password = document.getElementById("password").value;
+        if (password) {
+          sessionStorage.setItem("fastrtc", password);
+          window.location.href = "/authrtc/" + room;
+        } else {
+          window.location.href = "/rtc/" + room;
+        }
+      }
+    </script>
   </body>
 </html>

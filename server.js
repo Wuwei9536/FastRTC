@@ -15,6 +15,10 @@ app.get("/rtc/*", (req, res) => {
   res.sendFile(path.join(public, "rtc.html"));
 });
 
+app.get("/authrtc/*", (req, res) => {
+  res.sendFile(path.join(public, "rtc.html"));
+});
+
 app.get("/notsupported", (req, res) => {
   res.sendFile(path.join(public, "notsupported.html"));
 });
