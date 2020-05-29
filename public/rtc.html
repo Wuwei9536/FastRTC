@@ -25,13 +25,14 @@
     <title>fastrtc</title>
     <meta name="description" content="" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="/webrtc.svg" type="image/x-icon" />
+    <link rel="icon" href="/images/webrtc.png" type="image/x-icon" />
     <link rel="stylesheet" href="/css/rtc.css" />
     <link rel="stylesheet" href="/css/snackbar.css" />
     <link rel="stylesheet" href="/css/loading-ball.css" />
     <link rel="stylesheet" href="/fontawesome/css/free.min.css" />
     <link rel="stylesheet" href="/fontawesome/css/v4-shims.min.css" />
     <link rel="stylesheet" href="/fontawesome/css/font-face.min.css" />
+    <link rel="manifest" href="/manifest.json" />
   </head>
   <body>
     <!--[if lt IE 7]>
@@ -133,5 +134,13 @@
     <script defer src="/utils/autolink.js"></script>
     <script src="/utils/utils.js"></script>
     <script id="chatJS" src="/js/rtc.js"></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/sw.js");
+        });
+      }
+    </script>
   </body>
 </html>

@@ -26,6 +26,7 @@
     <meta name="description" content="" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="" />
+    <link rel="icon" href="/images/webrtc.png" type="image/x-icon" />
   </head>
   <body>
     <!--[if lt IE 7]>
@@ -39,5 +40,12 @@
       回到首页
     </button>
     <script src="" async defer></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/sw.js");
+        });
+      }
+    </script>
   </body>
 </html>
