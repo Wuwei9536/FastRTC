@@ -32,7 +32,7 @@ const localVideoGlobal = document.getElementById("local-video");
 const localVideoGlobalWrap = document.getElementById("moveable");
 const captionText = document.getElementById("remote-video-text");
 const localVideoText = document.getElementById("local-video-text");
-const captionButtontext = document.getElementById("caption-button-text");
+// const captionButtontext = document.getElementById("caption-button-text");
 const entireChat = document.getElementById("entire-chat");
 const chatZone = document.getElementById("chat-zone");
 
@@ -234,7 +234,7 @@ const WebRTC = {
   //RTCIceCandidate并将其添加到peerConnection。
   onCandidate: function (candidate) {
     //更新字幕
-    captionText.textContent = "Found other user... connecting";
+    captionText.textContent = "找到其他用户...正在连接";
     rtcCandidate = new RTCIceCandidate(JSON.parse(candidate));
     logIt(
       `onCandidate <<< Received remote ICE candidate (${rtcCandidate.address} - ${rtcCandidate.relatedAddress})`
@@ -649,7 +649,7 @@ function bootstrap() {
       ua.indexOf("Instagram") > -1)
   ) {
     if (DetectRTC.osName === "iOS") {
-      window.location.href = "/notsupportedios";
+      window.location.href = "/notsupported";
     } else {
       window.location.href = "/notsupported";
     }
