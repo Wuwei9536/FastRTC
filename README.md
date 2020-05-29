@@ -12,7 +12,16 @@ Video chat platform powered by WebRTC using self-built STUN/TURN infrastructure.
 ## A Video Chat inspired by ianramzy's [Zipcall](https://github.com/ianramzy/decentralized-video-chat).
 
 The code is modified based on Zipcall.ZipCall is a great project, and its UI is also comfortable.I like it very much and recommend it.
-Based on Zipcall, FastRTC supports self-built STUN /TURN server, which strips out the dependency on twilio, and supports call encryption, so that both parties to the connection need to know the room password to talk.
+
+But for well-known reasons, In China, We need to use Zipcall through the scientific Internet.
+In response to this problem, I did some work.
+
+Based on Zipcall,FastRTC adds the following features.
+
+- Support self-built STUN /TURN server to strips out the dependency on twilio.
+- Support call encryption, so that both parties to the connection need to know the room password to talk.
+- Have PWA characteristics, so that it is installable.
+
 I will continue to add new features
 
 ## Features
@@ -22,8 +31,9 @@ I will continue to add new features
 - Screen sharing
 - Picture in picture
 - Text chat
-- support self-built STUN/TURN
-- use password to join call
+- Support self-built STUN/TURN
+- Use password to join call
+- Installable (PWA)
 
 ## Quick start
 
