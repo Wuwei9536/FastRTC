@@ -54,6 +54,10 @@ npm start
 
 Pull Requests are welcome!
 
+## STUN /TURN
+
+Maybe you need [coturn](https://github.com/coturn/coturn)
+
 ## Zipcall's homepage
 
 [Zipcall](https://github.com/ianramzy/decentralized-video-chat)

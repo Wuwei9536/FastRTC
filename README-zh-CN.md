@@ -52,6 +52,10 @@ npm start
 
 欢迎 PR
 
+## STUN /TURN
+
+也许你需要 [coturn](https://github.com/coturn/coturn)
+
 ## Zipcall's 主页
 
 [Zipcall](https://github.com/ianramzy/decentralized-video-chat)
