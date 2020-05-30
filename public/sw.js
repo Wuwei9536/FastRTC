@@ -1,5 +1,5 @@
 // Files to cache
-var cacheName = "fastrtc-v1";
+var cacheName = "fastrtc-v2";
 var cacheFiles = [
   "/utils/adapter.js",
   "/utils/autolink.js",
@@ -9,14 +9,14 @@ var cacheFiles = [
   "/fontawesome/css/font-face.min.css",
   "/fontawesome/css/free.min.css",
   "/fontawesome/css/v4-shims.min.css",
-  "./fontawesome/webfonts/fa-solid-900.woff2",
-  "./fontawesome/webfonts/fa-solid-900.woff",
-  "./icons/icon-256x256.png",
-  "./images/logo.png",
-  "./css/call.css",
-  "./css/loading-ball.css",
-  "./css/rtc.css",
-  "./css/snackbar.css",
+  "/fontawesome/webfonts/fa-solid-900.woff2",
+  "/fontawesome/webfonts/fa-solid-900.woff",
+  "/icons/icon-256x256.png",
+  "/images/logo.png",
+  "/css/call.css",
+  "/css/loading-ball.css",
+  "/css/rtc.css",
+  "/css/snackbar.css",
 ];
 
 // Installing Service Worker
@@ -45,6 +45,22 @@ self.addEventListener("fetch", function (e) {
             // cache.put(e.request, response.clone());
             return response;
           });
+        })
+      );
+    })
+  );
+});
+
+self.addEventListener("activate", function (event) {
+  var cacheWhitelist = ["fastrtc-v2"];
+
+  event.waitUntil(
+    caches.keys().then(function (keyList) {
+      return Promise.all(
+        keyList.map(function (key) {
+          if (cacheWhitelist.indexOf(key) === -1) {
+            return caches.delete(key);
+          }
         })
       );
     })

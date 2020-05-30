@@ -1,6 +1,6 @@
 body,
 html {
-  background-color: #EBECF0;
+  background-color: #16171a;
 }
 
 body,
@@ -9,15 +9,9 @@ input,
 select,
 textarea,
 button {
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   letter-spacing: -0.2px;
   font-size: 16px;
-}
-
-div,
-p {
-  color: #BABECC;
-  text-shadow: 1px 1px 1px #FFF;
 }
 
 form {
@@ -38,40 +32,44 @@ input {
   font-size: 16px;
   border-radius: 320px;
   padding: 16px;
-  background-color: #EBECF0;
-  text-shadow: 1px 1px 0 #FFF;
+  background-color: #16171a;
+}
+
+button,
+input::placeholder {
+  color: #fff;
 }
 
 label {
   display: block;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
   width: 100%;
 }
 
 input {
   margin-right: 8px;
-  -webkit-box-shadow: inset 2px 2px 5px #BABECC, inset -5px -5px 10px #FFF;
-          box-shadow: inset 2px 2px 5px #BABECC, inset -5px -5px 10px #FFF;
+  -webkit-box-shadow: inset 2px 2px 5px #000000, inset -5px -5px 10px #000000;
+  box-shadow: inset 2px 2px 5px #000000, inset -5px -5px 10px #000000;
   width: 100%;
   -webkit-box-sizing: border-box;
-          box-sizing: border-box;
+  box-sizing: border-box;
   -webkit-transition: all 0.2s ease-in-out;
   transition: all 0.2s ease-in-out;
   -moz-appearance: none;
-       appearance: none;
+  appearance: none;
   -webkit-appearance: none;
 }
 
 input:focus {
-  -webkit-box-shadow: inset 1px 1px 2px #BABECC, inset -1px -1px 2px #FFF;
-          box-shadow: inset 1px 1px 2px #BABECC, inset -1px -1px 2px #FFF;
+  -webkit-box-shadow: inset 1px 1px 2px #babecc, inset -1px -1px 2px #fff;
+  box-shadow: inset 1px 1px 2px #babecc, inset -1px -1px 2px #fff;
 }
 
 button {
-  color: #61677C;
+  color: #61677c;
   font-weight: bold;
-  -webkit-box-shadow: -5px -5px 20px #FFF, 5px 5px 20px #BABECC;
-          box-shadow: -5px -5px 20px #FFF, 5px 5px 20px #BABECC;
+  -webkit-box-shadow: -5px -5px 20px #fff, 5px 5px 20px #babecc;
+  box-shadow: -5px -5px 20px #fff, 5px 5px 20px #babecc;
   -webkit-transition: all 0.2s ease-in-out;
   transition: all 0.2s ease-in-out;
   cursor: pointer;
@@ -79,13 +77,13 @@ button {
 }
 
 button:hover {
-  -webkit-box-shadow: -2px -2px 5px #FFF, 2px 2px 5px #BABECC;
-          box-shadow: -2px -2px 5px #FFF, 2px 2px 5px #BABECC;
+  -webkit-box-shadow: -2px -2px 5px #fff, 2px 2px 5px #babecc;
+  box-shadow: -2px -2px 5px #fff, 2px 2px 5px #babecc;
 }
 
 button:active {
-  -webkit-box-shadow: inset 1px 1px 2px #BABECC, inset -1px -1px 2px #FFF;
-          box-shadow: inset 1px 1px 2px #BABECC, inset -1px -1px 2px #FFF;
+  -webkit-box-shadow: inset 1px 1px 2px #babecc, inset -1px -1px 2px #fff;
+  box-shadow: inset 1px 1px 2px #babecc, inset -1px -1px 2px #fff;
 }
 
 button .icon {
@@ -101,11 +99,11 @@ button.unit {
   display: -ms-inline-flexbox;
   display: inline-flex;
   -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
   -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
   margin: 0 8px;
   font-size: 19.2px;
 }
@@ -117,7 +115,7 @@ button.unit .icon {
 button.red {
   display: block;
   width: 100%;
-  color: #AE1100;
+  color: #ae1100;
 }
 
 .input-group {
@@ -125,17 +123,36 @@ button.red {
   display: -ms-flexbox;
   display: flex;
   -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
   -webkit-box-pack: start;
-      -ms-flex-pack: start;
-          justify-content: flex-start;
+  -ms-flex-pack: start;
+  justify-content: flex-start;
 }
 
 .input-group label {
   margin: 0;
   -webkit-box-flex: 1;
-      -ms-flex: 1;
-          flex: 1;
+  -ms-flex: 1;
+  flex: 1;
 }
 /*# sourceMappingURL=call.css.map */
+
+.gradientText {
+  background-image: linear-gradient(90deg, #f66, #f90);
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: hue 5s linear infinite;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  margin-top: 20px;
+}
+
+@keyframes hue {
+  from {
+    filter: hue-rotate(0);
+  }
+  to {
+    filter: hue-rotate(-1turn);
+  }
+}

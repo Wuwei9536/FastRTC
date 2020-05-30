@@ -27,6 +27,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="" />
     <link rel="icon" href="/images/logo.png" type="image/x-icon" />
+    <style>
+      html {
+        height: 100%;
+      }
+      body {
+        background-color: #16171a;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+      }
+      button {
+        border: 0;
+        outline: 0;
+        font-size: 16px;
+        border-radius: 320px;
+        padding: 16px;
+        color: #61677c;
+        font-weight: bold;
+        -webkit-box-shadow: -5px -5px 20px #fff, 5px 5px 20px #babecc;
+        box-shadow: -5px -5px 20px #fff, 5px 5px 20px #babecc;
+        -webkit-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+        font-weight: 600;
+      }
+    </style>
   </head>
   <body>
     <!--[if lt IE 7]>
@@ -37,15 +64,8 @@
     <![endif]-->
 
     <button onclick="{window.location.href = '/'}">
-      回到首页
+      请更换浏览器后重试,回到首页
     </button>
     <script src="" async defer></script>
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", function () {
-          navigator.serviceWorker.register("/sw.js");
-        });
-      }
-    </script>
   </body>
 </html>

@@ -350,7 +350,7 @@ function chatRoomFull() {
     "聊天室已满。检查以确保您没有多个打开的标签，或者尝试使用新的会议室链接。"
   );
   //退出房间并重定向
-  window.location.href = "/newrtc";
+  window.location.href = "/";
 }
 
 //将本地视频重新定位到远程视频的左上方
