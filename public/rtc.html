@@ -115,6 +115,13 @@
       </div> -->
 
       <div class="buttonContainer">
+        <button class="hoverButton" onclick="{toggleWhiteBoard()}">
+          <i class="fas fa-chalkboard fa-xs"></i>
+        </button>
+        <div class="HoverState" id="whiteboard-text">Show Whiteboard</div>
+      </div>
+
+      <div class="buttonContainer">
         <button
           class="hoverButton"
           onclick="{window.location.href = '/newrtc'}"
@@ -124,6 +131,14 @@
         <div class="HoverState">End Call</div>
       </div>
     </div>
+
+    <canvas
+      id="whiteboard"
+      class="whiteboard"
+      style="display: none;"
+      width="600"
+      height="600"
+    ></canvas>
 
     <input type="hidden" id="copy-input" />
 

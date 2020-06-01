@@ -7,6 +7,10 @@ let videoEnabled;
 /* camera: 普通视屏流, screen: 共享屏幕 */
 let mode = "camera";
 let password = "";
+let drawing = false;
+let current = {
+  color: "red",
+};
 /* 浏览器类型 */
 const browserName = getBrowserName();
 /* 是否支持WebRTC */
@@ -35,6 +39,8 @@ const localVideoText = document.getElementById("local-video-text");
 // const captionButtontext = document.getElementById("caption-button-text");
 const entireChat = document.getElementById("entire-chat");
 const chatZone = document.getElementById("chat-zone");
+const whiteboard = document.getElementById("whiteboard");
+const whiteboardContext = whiteboard.getContext("2d");
 
 // Basic logging class wrapper
 function logIt(message, error) {
@@ -160,16 +166,15 @@ const WebRTC = {
       };
       //处理不同的dataChannel类型
       dataChanel.onmessage = function (event) {
-        const receivedData = event.data;
+        const receivedData = JSON.parse(event.data);
+
         // First 4 chars represent data type
-        const dataType = receivedData.substring(0, 4);
-        const cleanedMessage = receivedData.slice(4);
-        if (dataType === "mes:") {
+        const dataType = receivedData.type;
+        const cleanedMessage = receivedData.data;
+        if (dataType === "msg") {
           handleRecieveMessage(cleanedMessage);
-        } else if (dataType === "cap:") {
-          // recieveCaptions(cleanedMessage);
-        } else if (dataType === "tog:") {
-          // toggleSendCaptions();
+        } else if (dataType === "whiteboard") {
+          handleRecieveWhiteboard(cleanedMessage);
         }
       };
 
@@ -527,13 +532,13 @@ function toggleChat() {
   if (entireChat.style.display !== "none") {
     fadeOut(entireChat);
     // Update show chat buttton
-    chatText.textContent("Show Chat");
+    chatText.textContent = "Show Chat";
     chatIcon.classList.remove("fa-comment-slash");
     chatIcon.classList.add("fa-comment");
   } else {
     fadeIn(entireChat);
     // Update show chat buttton
-    chatText.textContent("Hide Chat");
+    chatText.textContent = "Hide Chat";
     chatIcon.classList.remove("fa-comment");
     chatIcon.classList.add("fa-comment-slash");
   }
@@ -574,7 +579,12 @@ chatInput.addEventListener("keypress", function (event) {
     // Make links clickable
     msg = msg.autoLink();
     // Send message over data channel
-    dataChanel.send("mes:" + msg);
+    dataChanel.send(
+      JSON.stringify({
+        type: "msg",
+        data: msg,
+      })
+    );
     // Add message to screen
     addMessageToScreen(msg, true);
     // Auto scroll chat down
@@ -637,6 +647,134 @@ function requestPassword() {
     password = sessionPassword;
   }
   roomHash = urlSuffix + password;
+}
+
+// WhiteBoard
+
+function onMouseDown(e) {
+  console.log("mouseDown");
+  drawing = true;
+  current.x = e.clientX || e.touches[0].clientX;
+  current.y = e.clientY || e.touches[0].clientY;
+}
+
+function onMouseUp(e) {
+  if (!drawing) {
+    return;
+  }
+  drawing = false;
+  drawLine(
+    current.x,
+    current.y,
+    e.clientX || e.touches[0].clientX,
+    e.clientY || e.touches[0].clientY,
+    current.color,
+    true
+  );
+}
+
+function onMouseMove(e) {
+  console.log("mouseMove");
+
+  if (!drawing) {
+    return;
+  }
+  drawLine(
+    current.x,
+    current.y,
+    e.clientX || e.touches[0].clientX,
+    e.clientY || e.touches[0].clientY,
+    current.color,
+    true
+  );
+  current.x = e.clientX || e.touches[0].clientX;
+  current.y = e.clientY || e.touches[0].clientY;
+}
+
+function drawLine(x0, y0, x1, y1, color, emit) {
+  console.log({ x0, y0, x1, y1, color, emit });
+  console.log({ whiteboardContext });
+  whiteboardContext.beginPath();
+  whiteboardContext.moveTo(
+    x0 - whiteboard.offsetLeft,
+    y0 - whiteboard.offsetTop
+  );
+  whiteboardContext.lineTo(
+    x1 - whiteboard.offsetLeft,
+    y1 - whiteboard.offsetTop
+  );
+  whiteboardContext.strokeStyle = color;
+  whiteboardContext.lineWidth = 2;
+  whiteboardContext.stroke();
+  whiteboardContext.closePath();
+
+  if (!emit) {
+    return;
+  }
+  var w = whiteboard.width;
+  var h = whiteboard.height;
+
+  dataChanel.send(
+    JSON.stringify({
+      type: "whiteboard",
+      data: {
+        x0: x0 / w,
+        y0: y0 / h,
+        x1: x1 / w,
+        y1: y1 / h,
+        color: color,
+      },
+    })
+  );
+}
+
+function toggleWhiteBoard() {
+  const whiteboardText = document.getElementById("whiteboard-text");
+  if (whiteboard.style.display === "none") {
+    fadeIn(whiteboard);
+    whiteboardText.textContent = "Hide Whiteboard";
+    whiteboard.addEventListener("mousedown", onMouseDown, false);
+    whiteboard.addEventListener("mouseup", onMouseUp, false);
+    whiteboard.addEventListener("mouseout", onMouseUp, false);
+    whiteboard.addEventListener("mousemove", throttle(onMouseMove, 10), false);
+
+    //Touch support for mobile devices
+    whiteboard.addEventListener("touchstart", onMouseDown, false);
+    whiteboard.addEventListener("touchend", onMouseUp, false);
+    whiteboard.addEventListener("touchcancel", onMouseUp, false);
+    whiteboard.addEventListener("touchmove", throttle(onMouseMove, 10), false);
+  } else {
+    whiteboard.removeEventListener("mousedown", onMouseDown, false);
+    whiteboard.removeEventListener("mouseup", onMouseUp, false);
+    whiteboard.removeEventListener("mouseout", onMouseUp, false);
+    whiteboard.removeEventListener(
+      "mousemove",
+      throttle(onMouseMove, 10),
+      false
+    );
+
+    //Touch support for mobile devices
+    whiteboard.removeEventListener("touchstart", onMouseDown, false);
+    whiteboard.removeEventListener("touchend", onMouseUp, false);
+    whiteboard.removeEventListener("touchcancel", onMouseUp, false);
+    whiteboard.removeEventListener(
+      "touchmove",
+      throttle(onMouseMove, 10),
+      false
+    );
+    whiteboardText.textContent = "Show Whiteboard";
+    fadeOut(whiteboard);
+  }
+}
+
+//当通过dataChannel接收到消息时调用
+function handleRecieveWhiteboard(data) {
+  if (whiteboard.style.display === "none") {
+    toggleWhiteBoard();
+  }
+  const w = whiteboard.width;
+  const h = whiteboard.height;
+  drawLine(data.x0 * w, data.y0 * h, data.x1 * w, data.y1 * h, data.color);
 }
 
 function bootstrap() {
