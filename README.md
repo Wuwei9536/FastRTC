@@ -21,6 +21,7 @@ Based on Zipcall,FastRTC adds the following features.
 - Support self-built STUN /TURN server to strips out the dependency on twilio.
 - Support call encryption, so that both parties to the connection need to know the room password to talk.
 - Have PWA characteristics, so that it is installable.
+- WhiteBoard
 
 I will continue to add new features
 
