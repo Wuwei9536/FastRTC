@@ -48,14 +48,8 @@ io.on("connection", function (socket) {
 
   socket.on("iceServers", function (room) {
     var response = {
-      iceServers: [
-        { url: "stun:122.152.205.63:3478" },
-        {
-          url: "turn:122.152.205.63:3478",
-          username: "wuwei",
-          credential: "wien",
-        },
-      ],
+      /* Notice: 这边需要添加自己的 STUN/TURN 服务器, 可以考虑Coturn(https://github.com/coturn/coturn) */
+      iceServers: [{ url: "stun:stun.l.google.com:19302" }],
     };
     socket.emit("iceServers", response).to(room);
   });

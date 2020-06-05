@@ -61,6 +61,10 @@ npm start
 - Open `localhost:3000` in browser
 - If you want to use a client on another computer/network, make sure you publish your server on an HTTPS connection.
 
+## Notice
+
+You need add your STUN/TURN infrastructure in server.js
+
 ## Contributing
 
 Pull Requests are welcome!
