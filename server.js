@@ -31,16 +31,16 @@ function logIt(msg) {
 io.on("connection", function (socket) {
   socket.on("join", function (room) {
     logIt(`A client joined the room ${room}`);
-    var clients = io.sockets.adapter.rooms[room];
-    var numClients = typeof clients !== "undefined" ? clients.length : 0;
+    const clients = io.sockets.adapter.rooms.get(room);
+    const numClients = typeof clients !== "undefined" ? clients.size : 0;
     if (numClients === 0) {
       socket.join(room);
     } else if (numClients === 1) {
       socket.join(room);
       logIt(`room ${room} Broadcasting ready message`);
-      socket.broadcast.to(room).emit("willInitiateCall", room);
-      socket.emit("ready", room).to(room);
-      socket.broadcast.to(room).emit("ready", room);
+      socket.to(room).emit("willInitiateCall", room);
+      socket.emit("ready", room);
+      socket.to(room).emit("ready", room);
     } else {
       socket.emit("full", room);
     }
@@ -57,23 +57,23 @@ io.on("connection", function (socket) {
         },
       ],
     };
-    socket.emit("iceServers", response).to(room);
+    socket.emit("iceServers", response);
   });
 
   // Relay candidate messages
   socket.on("candidate", function (candidate, room) {
     logIt(`${room} Received candidate. Broadcasting... ${candidate}`);
-    socket.broadcast.to(room).emit("candidate", candidate);
+    socket.to(room).emit("candidate", candidate);
   });
 
   // Relay offers
   socket.on("offer", function (offer, room) {
-    socket.broadcast.to(room).emit("offer", offer);
+    socket.to(room).emit("offer", offer);
   });
 
   // Relay answers
   socket.on("answer", function (answer, room) {
-    socket.broadcast.to(room).emit("answer", answer);
+    socket.to(room).emit("answer", answer);
   });
 });
 

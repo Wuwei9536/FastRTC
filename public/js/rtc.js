@@ -714,18 +714,20 @@ function drawLine(x0, y0, x1, y1, color, emit) {
   var w = whiteboard.width;
   var h = whiteboard.height;
 
-  dataChanel.send(
-    JSON.stringify({
-      type: "whiteboard",
-      data: {
-        x0: x0 / w,
-        y0: y0 / h,
-        x1: x1 / w,
-        y1: y1 / h,
-        color: color,
-      },
-    })
-  );
+  if (dataChanel) {
+    dataChanel.send(
+      JSON.stringify({
+        type: "whiteboard",
+        data: {
+          x0: x0 / w,
+          y0: y0 / h,
+          x1: x1 / w,
+          y1: y1 / h,
+          color: color,
+        },
+      })
+    );
+  }
 }
 
 function toggleWhiteBoard() {
